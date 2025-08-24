@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📰 French News Transition QA Tool</title>
+    <link href="style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📰 French News Transition QA Tool</h1>
+            <p class="subtitle"><strong>Contest Prototype:</strong> Quality assurance tool for French news transition phrases</p>
+            
+            <div class="info-panel">
+                <h3>📋 Objective:</h3>
+                <p>Evaluate French transition phrases between news paragraphs:</p>
+                <ul>
+                    <li>✅ <strong>Rule Checks:</strong> Word count ≤5, concluding placement</li>
+                    <li>✅ <strong>Repetition Detection:</strong> French lemma analysis</li>
+                    <li>✅ <strong>Thematic Cohesion:</strong> Transition ↔ next paragraph similarity > transition ↔ previous paragraph</li>
+                    <li>✅ <strong>Explainable Results:</strong> Clear pass/fail with detailed failure reasons</li>
+                </ul>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="config-panel">
+                    <h3>⚙️ Configuration</h3>
+                    <div class="form-group">
+                        <label for="similarity-threshold">Similarity Threshold</label>
+                        <input type="range" id="similarity-threshold" min="0" max="1" step="0.05" value="0.1">
+                        <span id="threshold-value">0.1</span>
+                        <small>Minimum difference between transition→next and transition→previous similarity</small>
+                    </div>
+                </div>
+
+                <div class="help-panel">
+                    <details>
+                        <summary>ℹ️ How to use this tool</summary>
+                        <div class="help-content">
+                            <h4>Input Format</h4>
+                            <p>The tool expects French news articles in this format:</p>
+                            <pre><code>Titre: [Article title]
+Chapeau: [Article summary]
+Article: [Article content with multiple paragraphs]
+Transitions générées:
+1. [First transition]
+2. [Second transition]
+...</code></pre>
+                            
+                            <h4>Analysis Features</h4>
+                            <ul>
+                                <li><strong>Rule Validation:</strong> Checks 5-word limit and concluding placement rules</li>
+                                <li><strong>Repetition Detection:</strong> Identifies repeated lemmas across the article</li>
+                                <li><strong>Semantic Analysis:</strong> Evaluates thematic cohesion between transitions and adjacent paragraphs</li>
+                                <li><strong>Comprehensive Reporting:</strong> Detailed results with explanations for failures</li>
+                            </ul>
+                            
+                            <h4>Output</h4>
+                            <ul>
+                                <li>Results table with pass/fail status and detailed explanations</li>
+                                <li>Summary statistics and visualizations</li>
+                                <li>Export functionality (CSV/HTML)</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="content">
+                <section class="input-section">
+                    <h2>📁 Input Data</h2>
+                    
+                    <div class="input-methods">
+                        <div class="input-method">
+                            <h3>Upload File</h3>
+                            <input type="file" id="file-upload" accept=".txt" class="file-input">
+                            <label for="file-upload" class="file-label">
+                                <i class="fas fa-upload"></i> Choose file (.txt)
+                            </label>
+                            <div id="file-status" class="file-status"></div>
+                        </div>
+
+                        <div class="input-method">
+                            <h3>Paste Text Directly</h3>
+                            <textarea id="text-input" placeholder="Paste your French news articles here..." rows="10"></textarea>
+                        </div>
+
+                        <div class="input-method">
+                            <h3>Load Sample Data</h3>
+                            <button id="load-sample" class="btn btn-secondary">
+                                <i class="fas fa-clipboard"></i> Load Sample Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="analyze-section">
+                        <button id="analyze-btn" class="btn btn-primary" disabled>
+                            <i class="fas fa-rocket"></i> Analyze Transitions
+                        </button>
+                        <div id="loading" class="loading hidden">
+                            <div class="spinner"></div>
+                            <span>Processing articles...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="results-section" class="results-section hidden">
+                    <h2>📊 Analysis Results</h2>
+                    
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value" id="total-transitions">0</div>
+                            <div class="metric-label">Total Transitions</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="compliance-rate">0%</div>
+                            <div class="metric-label">Compliance Rate</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="failed-transitions">0</div>
+                            <div class="metric-label">Failed Transitions</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="articles-processed">0</div>
+                            <div class="metric-label">Articles Processed</div>
+                        </div>
+                    </div>
+
+                    <div class="results-controls">
+                        <div class="filters">
+                            <label>
+                                <input type="checkbox" id="show-failed-only"> Show failed transitions only
+                            </label>
+                            <select id="article-filter" multiple>
+                                <option value="">All Articles</option>
+                            </select>
+                        </div>
+                        <div class="export-controls">
+                            <button id="export-csv" class="btn btn-outline">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                            <button id="export-html" class="btn btn-outline">
+                                <i class="fas fa-file-code"></i> Export HTML
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="results-table-container">
+                        <table id="results-table" class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Article ID</th>
+                                    <th>Para Index</th>
+                                    <th>Transition Text</th>
+                                    <th>Word Limit ≤5</th>
+                                    <th>Placement OK</th>
+                                    <th>No Repetition</th>
+                                    <th>Cohesion OK</th>
+                                    <th>Overall Pass</th>
+                                    <th>Failure Reason</th>
+                                    <th>Sim Next</th>
+                                    <th>Sim Prev</th>
+                                    <th>Words</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="visualizations">
+                        <h3>📈 Analysis Visualizations</h3>
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h4>Failure Types Distribution</h4>
+                                <canvas id="failure-chart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h4>Word Count Distribution</h4>
+                                <canvas id="wordcount-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
